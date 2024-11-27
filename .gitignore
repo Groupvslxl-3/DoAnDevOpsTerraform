@@ -1,0 +1,21 @@
+# Ignore Terraform files
+.terraform/*
+*.tfstateq
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Ignore override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
+
+# Ignore .terraform.lock.hcl file
+.terraform.lock.hcl
+
+*.log

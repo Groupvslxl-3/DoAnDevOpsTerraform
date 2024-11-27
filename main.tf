@@ -1,219 +1,83 @@
 provider "aws" {
-  region     = "us-east-1"
+  region = var.region
 }
 
-# Tạo VPC
-resource "aws_vpc" "my_vpc" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "My VPC"
-  }
+module "VPC" {
+  source               = "./modules/VPC"
+  vpc_cidr             = var.vpc_cidr
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
+  availability_zones   = var.availability_zones
 }
 
-# Tạo subnet ở AZ đầu tiên
-resource "aws_subnet" "public_subnet_1" {
-  vpc_id            = aws_vpc.my_vpc.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-east-1a"
-
-  tags = {
-    Name = "Public Subnet 1"
-  }
+module "Route_Tables" {
+  source              = "./modules/Route_Tables"
+  vpc_id              = module.VPC.vpc_id
+  public_subnet_ids   = module.VPC.public_subnet_ids
+  private_subnet_ids  = module.VPC.private_subnet_ids
+  internet_gateway_id = module.VPC.internet_gateway_id
+  nat_gateway_ids     = module.Nat_Gateway.nat_gateway_ids
 }
 
-# Tạo subnet ở AZ thứ hai
-resource "aws_subnet" "public_subnet_2" {
-  vpc_id            = aws_vpc.my_vpc.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-east-1b"
 
-  tags = {
-    Name = "Public Subnet 2"
-  }
+module "Nat_Gateway" {
+  source            = "./modules/Nat_Gateway"
+  public_subnet_ids = module.VPC.public_subnet_ids
 }
 
-# Tạo Internet Gateway và Route Table
-resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.my_vpc.id
+# module "ec2" {
+#   source                 = "./modules/ec2"
+#   ami_id                 = var.ami_id
+#   instance_type          = var.instance_type
+#   public_subnet_ids      = module.VPC.public_subnet_ids
+#   private_subnet_ids     = module.VPC.private_subnet_ids
+#   public_sg_id           = module.Security_Groups.public_sg_id
+#   private_sg_id          = module.Security_Groups.private_sg_id
+#   //key_name               = aws_key_pair.nhom15.key_name
+#   public_instance_count  = var.public_instance_count
+#   private_instance_count = var.private_instance_count
+#   key_name               = var.key_name
+# }
 
-  tags = {
-    Name = "My Internet Gateway"
-  }
+module "Security_Groups" {
+  source = "./modules/Security_Group"
+  vpc_id = module.VPC.vpc_id
+  my_ip  = var.my_ip
 }
 
-resource "aws_route_table" "public_rt" {
-  vpc_id = aws_vpc.my_vpc.id
+# resource "aws_key_pair" "nhom15" {
+#   key_name   = "Nhom15"
+#   public_key = var.id_ed25519_pub
+# }
 
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id
-  }
-
-  tags = {
-    Name = "Public Route Table"
-  }
+module "keypair" {
+  source             = "./modules/keypair"
+  key_name           = var.key_name
+  create_private_key = true
 }
 
-resource "aws_route_table_association" "public_rt_assoc" {
-  subnet_id      = aws_subnet.public_subnet_1.id
-  route_table_id = aws_route_table.public_rt.id
+resource "local_file" "private_key" {
+  content         = module.keypair.private_key_pem
+  filename        = "${path.module}/${var.key_name}.pem"
+  file_permission = "0600"
 }
 
-# Tạo security group
-resource "aws_security_group" "my_security_group" {
-  name_prefix = "my-sg-"
-  vpc_id      = aws_vpc.my_vpc.id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port       = 0
-    to_port         = 0 
-    protocol        = "-1"
-    cidr_blocks     = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "My Security Group"
-  }
+module "iam" {
+  source = "./modules/iam"
+  eks_cluster_role_name = var.eks_cluster_role_name
+  worker_node_role_name = var.worker_node_role_name
 }
 
-# Tạo security group cho EKS
-resource "aws_security_group" "eks_sg" {
-  name_prefix = "eks-sg-"
-  vpc_id      = aws_vpc.my_vpc.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "EKS Security Group"
-  }
-}
-
-# IAM Role cho EKS Cluster
-resource "aws_iam_role" "eks_cluster_role" {
-  name = "eks-cluster-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "eks.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.eks_cluster_role.name
-}
-
-# IAM Role cho Node Group
-resource "aws_iam_role" "eks_node_role" {
-  name = "eks-node-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-  role       = aws_iam_role.eks_node_role.name
-}
-
-resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-  role       = aws_iam_role.eks_node_role.name
-}
-
-resource "aws_iam_role_policy_attachment" "eks_container_registry_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-  role       = aws_iam_role.eks_node_role.name
-}
-
-# EKS Cluster
-resource "aws_eks_cluster" "main" {
-  name     = "my-eks-cluster"
-  role_arn = aws_iam_role.eks_cluster_role.arn
-  version  = "1.27"
-
-  vpc_config {
-    subnet_ids         = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
-    security_group_ids = [aws_security_group.eks_sg.id]
-  }
-
-  depends_on = [
-    aws_iam_role_policy_attachment.eks_cluster_policy
-  ]
-}
-
-# EKS Node Group
-resource "aws_eks_node_group" "main" {
-  cluster_name    = aws_eks_cluster.main.name
-  node_group_name = "main-node-group"
-  node_role_arn   = aws_iam_role.eks_node_role.arn
-  subnet_ids      = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
-
-  scaling_config {
-    desired_size = 2
-    max_size     = 3
-    min_size     = 1
-  }
-
-  instance_types = ["t3.medium"]
-
-  depends_on = [
-    aws_iam_role_policy_attachment.eks_worker_node_policy,
-    aws_iam_role_policy_attachment.eks_cni_policy,
-    aws_iam_role_policy_attachment.eks_container_registry_policy
-  ]
-}
-
-# Output để lấy thông tin kết nối
-output "cluster_endpoint" {
-  value = aws_eks_cluster.main.endpoint
-}
-
-output "cluster_name" {
-  value = aws_eks_cluster.main.name
+module "eks" {
+  source = "./modules/eks"
+  cluster_name = var.cluster_name
+  cluster_role_arn = module.iam.eks_cluster_role_arn
+  node_group_role_arn = module.iam.eks_worker_node_role_arn
+  public_subnet_ids = module.VPC.public_subnet_ids
+  private_subnet_ids = module.VPC.private_subnet_ids
+  public_node_group_name = var.public_node_group_name
+  private_node_group_name = var.private_node_group_name
+  instance_types = var.instance_types
+  key_name = var.key_name
+  depends_on = [ module.iam, module.VPC ]
 }

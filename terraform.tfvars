@@ -1,0 +1,11 @@
+region               = "us-east-1"
+vpc_cidr             = "10.0.0.0/16"
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_cidrs = ["10.0.3.0/24", "10.0.4.0/24"]
+availability_zones   = ["us-east-1a", "us-east-1b"]
+//my_ip                = "14.186.138.123/32"
+ami_id               = "ami-0866a3c8686eaeeba"
+instance_type        = "t2.micro"
+public_instance_count  = 1
+private_instance_count = 1
+id_ed25519_pub        = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBu7AZqUlUjUJp+e8lo/JJRH1NLEZW6O1Z11nbiiwbXy codykhoanguyen@gmail.com"
