@@ -32,31 +32,31 @@ resource "aws_eks_node_group" "public" {
   scaling_config {
     desired_size = 1
     min_size = 1
-    max_size = 2
+    max_size = 3
   }
 }
 
-resource "aws_eks_node_group" "private" {
-  cluster_name = aws_eks_cluster.this.name
-  node_group_name = var.private_node_group_name
-  node_role_arn = var.node_group_role_arn
-  subnet_ids = var.private_subnet_ids
-  instance_types = var.instance_types
+# resource "aws_eks_node_group" "private" {
+#   cluster_name = aws_eks_cluster.this.name
+#   node_group_name = var.private_node_group_name
+#   node_role_arn = var.node_group_role_arn
+#   subnet_ids = var.private_subnet_ids
+#   instance_types = var.instance_types
 
-  update_config {
-    max_unavailable = 1
-  }
+#   update_config {
+#     max_unavailable = 1
+#   }
 
-  remote_access {
-    ec2_ssh_key = var.key_name
-  }
+#   remote_access {
+#     ec2_ssh_key = var.key_name
+#   }
 
-  scaling_config {
-    desired_size = 1
-    min_size = 1
-    max_size = 2
-  }
-}
+#   scaling_config {
+#     desired_size = 1
+#     min_size = 1
+#     max_size = 2
+#   }
+# }
 
 // Create IAM role for service account
 data "tls_certificate" "tls" {
@@ -85,4 +85,12 @@ data "aws_iam_policy_document" "assume_role_policy" {
       type        = "Federated"
     }
   }
+}
+
+data "aws_eks_cluster_auth" "group15" {
+  name = var.cluster_name
+
+  depends_on = [
+    aws_eks_cluster.this
+  ]
 }

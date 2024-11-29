@@ -2,6 +2,12 @@ provider "aws" {
   region = var.region
 }
 
+provider "kubernetes" {
+  host                   = module.eks.eks_cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.eks_cluster_certificate)
+  token                  = module.eks.eks_cluster_auth
+}
+
 module "VPC" {
   source               = "./modules/VPC"
   vpc_cidr             = var.vpc_cidr
@@ -80,4 +86,10 @@ module "eks" {
   instance_types = var.instance_types
   key_name = var.key_name
   depends_on = [ module.iam, module.VPC ]
+}
+
+module "kubernetes" {
+  source = "./modules/kubernetes"
+  user_name = var.iam_user_name
+  depends_on = [ module.eks ]
 }

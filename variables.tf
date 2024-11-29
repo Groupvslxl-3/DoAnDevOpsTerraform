@@ -108,3 +108,9 @@ variable "instance_types" {
   default = [ "t3.medium" ]
 }
 
+variable "iam_user_name" {
+  type = string
+  description = "Name of IAM username"
+  default = "group15"
+}
+
