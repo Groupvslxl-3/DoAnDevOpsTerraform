@@ -21,26 +21,25 @@ pipeline {
         stage('Git Pulling') {
             steps {
                 git branch: 'main', url: 'https://github.com/Groupvslxl-3/DoAnDevOpsTerraform.git'
-                sh 'echo dang chay'
             }
         }
         stage('Init') {
             steps {
-                withAWS(credentials: 'AWS_SECRET_KEY', region: 'us-east-1') {
+                withAWS(credentials: 'AWS_SECRET_KEY_2', region: 'us-east-1') {
                 sh 'terraform init'
                 }
             }
         }
         stage('Validate') {
             steps {
-                withAWS(credentials: 'AWS_SECRET_KEY', region: 'us-east-1') {
+                withAWS(credentials: 'AWS_SECRET_KEY_2', region: 'us-east-1') {
                 sh 'terraform validate'
                 }
             }
         }
         stage('Action') {
             steps {
-                withAWS(credentials: 'AWS_SECRET_KEY', region: 'us-east-1') {
+                withAWS(credentials: 'AWS_SECRET_KEY_2', region: 'us-east-1') {
                     script {    
                         if (params.Terraform_Action == 'plan') {
                             sh "terraform plan"
