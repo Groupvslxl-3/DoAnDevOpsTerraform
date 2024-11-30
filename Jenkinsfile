@@ -21,6 +21,7 @@ pipeline {
         stage('Git Pulling') {
             steps {
                 git branch: 'main', url: 'https://github.com/Groupvslxl-3/DoAnDevOpsTerraform.git'
+                sh 'echo dang chay'
             }
         }
         stage('Init') {
