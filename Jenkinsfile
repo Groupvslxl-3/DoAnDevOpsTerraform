@@ -25,21 +25,21 @@ pipeline {
         }
         stage('Init') {
             steps {
-                withAWS(credentials: 'AWS_SECRET_KEY', region: 'us-east-1') {
+                withAWS(credentials: 'AKIAUZPNLW6UWNSKSZM7', region: 'us-east-1') {
                 sh 'terraform init'
                 }
             }
         }
         stage('Validate') {
             steps {
-                withAWS(credentials: 'AWS_SECRET_KEY', region: 'us-east-1') {
+                withAWS(credentials: 'AKIAUZPNLW6UWNSKSZM7', region: 'us-east-1') {
                 sh 'terraform validate'
                 }
             }
         }
         stage('Action') {
             steps {
-                withAWS(credentials: 'AWS_SECRET_KEY', region: 'us-east-1') {
+                withAWS(credentials: 'AKIAUZPNLW6UWNSKSZM7', region: 'us-east-1') {
                     script {    
                         if (params.Terraform_Action == 'plan') {
                             sh "terraform plan"
