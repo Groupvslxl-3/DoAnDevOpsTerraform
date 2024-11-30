@@ -14,10 +14,17 @@ output "default_security_group_id" {
   value = module.VPC.default_security_group_id
 }
 
-# output "public_instance_ips" {
-#   value = module.ec2.public_instance_ips
-# }
+output "route53_name_servers" {
+  description = "Name servers của Route53 hosted zone"
+  value       = module.Route53.name_servers
+}
 
-# output "private_instance_ips" {
-#   value = module.ec2.private_instance_ips
-# }
+output "route53_zone_id" {
+  description = "Zone ID của Route53 hosted zone"
+  value       = module.Route53.zone_id
+}
+
+output "domain_name" {
+  description = "Tên domain"
+  value       = module.Route53.domain_name
+}

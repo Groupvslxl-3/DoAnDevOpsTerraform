@@ -93,3 +93,7 @@ module "kubernetes" {
   user_name = var.iam_user_name
   depends_on = [ module.eks ]
 }
+
+module "Route53" {
+  source = "./modules/Route53"
+}
