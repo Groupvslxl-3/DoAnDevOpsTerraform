@@ -45,6 +45,9 @@ pipeline {
                             sh "terraform plan"
                         }   else if (params.Terraform_Action == 'apply') {
                             sh "terraform apply -auto-approve"
+                            echo "Triggering PipelineDockerKubernets..."
+                            // Trigger another pipeline
+                            build job: 'PipelineDockerKubernets', wait: true
                         }   else if (params.Terraform_Action == 'destroy') {
                             sh "terraform destroy -auto-approve"
                         } else {
