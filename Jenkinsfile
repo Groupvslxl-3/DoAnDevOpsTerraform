@@ -1,16 +1,16 @@
 pipeline {
     agent any
 
-    tool {
+    tools {
         terraform 'terraform'
     }
 
-    parameters(        
+    parameters{        
         choice(
             choices: ['plan', 'apply', 'destroy'], 
             name: 'Terraform_Action'
         )
-    )
+    }
 
     stages {
         stage('Preparing') {
