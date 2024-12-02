@@ -31,14 +31,10 @@ provider "helm" {
     }
 }
 
-provider "kubernetes" {
-  config_path = "/var/lib/jenkins/.kube/config"
-}
-
 provider "kubectl" {
    load_config_file = false
-   host                   = data.aws_eks_cluster.ClusterName.endpoint
-   cluster_ca_certificate = base64decode(data.aws_eks_cluster.ClusterName.certificate_authority[0].data)
-   token                  = data.aws_eks_cluster_auth.ClusterName_auth.token
+   host                   = data.aws_eks_cluster.group15-cluster.endpoint
+   cluster_ca_certificate = base64decode(data.aws_eks_cluster.group15-cluster.certificate_authority[0].data)
+   token                  = data.aws_eks_cluster_auth.group15-cluster.token
     config_path = "/var/lib/jenkins/.kube/config"
     }
