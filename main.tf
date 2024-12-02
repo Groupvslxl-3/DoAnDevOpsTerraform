@@ -131,7 +131,7 @@ resource "helm_release" "prometheus" {
   create_namespace = true
   version    = "45.7.1"
   values = [
-    file("values.yaml")
+    file("./values.yaml")
   ]
   timeout = 2000
   
