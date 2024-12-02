@@ -102,7 +102,7 @@ module "Route53" {
 
 data "aws_eks_node_group" "eks-node-group" {
   cluster_name = "group15-cluster"
-  node_group_name = "group15-cluster"
+  node_group_name = "public"
 }
 
 resource "time_sleep" "wait_for_kubernetes" {
