@@ -19,6 +19,7 @@ terraform {
 
 
 data "aws_eks_cluster" "group15-cluster" {
+  depends_on = [ module.eks ]
   name = "group15-cluster"
 }
 data "aws_eks_cluster_auth" "group15-cluster" {
@@ -28,6 +29,7 @@ data "aws_eks_cluster_auth" "group15-cluster" {
 provider "helm" {
     kubernetes {
       config_path = "/var/lib/jenkins/.kube/config"
+      # config_path = "~/.kube/config"
     }
 }
 
@@ -37,4 +39,5 @@ provider "kubectl" {
    cluster_ca_certificate = base64decode(data.aws_eks_cluster.group15-cluster.certificate_authority[0].data)
    token                  = data.aws_eks_cluster_auth.group15-cluster.token
     config_path = "/var/lib/jenkins/.kube/config"
+    # config_path = "~/.kube/config"
     }

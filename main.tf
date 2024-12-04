@@ -98,9 +98,10 @@ module "Route53" {
   source = "./modules/Route53"
 }
 
-#--------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------
 
 data "aws_eks_node_group" "eks-node-group" {
+  depends_on = [ module.eks ]
   cluster_name = "group15-cluster"
   node_group_name = var.public_node_group_name
 }
@@ -123,7 +124,7 @@ resource "kubernetes_namespace" "kube-namespace" {
 }
 
 resource "helm_release" "prometheus" {
-  depends_on = [kubernetes_namespace.kube-namespace, time_sleep.wait_for_kubernetes]
+  depends_on = [kubernetes_namespace.kube-namespace, time_sleep.wait_for_kubernetes, module.eks ]
   name       = "prometheus"
   repository = "https://prometheus-community.github.io/helm-charts"
   chart      = "kube-prometheus-stack"
