@@ -51,6 +51,7 @@ pipeline {
                             echo "Triggering PipelineDockerKubernets..."
                             // Trigger another pipeline
                             build job: 'PipelineDockerKubernets', parameters: [string(name: 'ACTION', value: 'deploy')], wait: true
+                            sh "terraform apply -auto-approve"
                         }   else if (params.Terraform_Action == 'destroy') {
                             sh "terraform destroy -auto-approve"
                         } else {
